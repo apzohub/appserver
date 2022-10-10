@@ -1,0 +1,36 @@
+{
+  "name": "apserver",
+  "version": "1.0.0",
+  "description": "Server",
+  "main": "Server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sec": "snyk test",
+    "secwiz": "snyk wizard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apzohub/ahserver.git"
+  },
+  "keywords": [
+    "apzohub",
+    "server"
+  ],
+  "author": "apzohub",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/apzohub/ahserver/issues"
+  },
+  "homepage": "https://github.com/apzohub/ahserver#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-graphql": "^0.12.0",
+    "helmet": "^6.0.0",
+    "mongodb": "^4.10.0",
+    "passport": "^0.6.0",
+    "redis": "^4.3.1"
+  },
+  "devDependencies": {
+    "liquibase": "^4.4.0"
+  }
+}

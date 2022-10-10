@@ -1,0 +1,35 @@
+version: '2.4'
+services:
+  apserver:
+    build: .
+    image: apserver
+    container_name: apserver
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_started
+    ports:
+      - "8443:8443"
+    volumes:
+      - /opt/apzohub/apserver:/opt/apzohub/apserver
+      - /tmp/apzohub:/tmp/apzohub
+
+  webapp:
+    image: nginx:alpine
+    container_name: webapp
+    restart: always
+    depends_on:
+      apserver:
+        condition: service_started
+    ports:
+      - "443:443"
+    volumes:
+      - /opt/apzohub/apserver/etc/nginx.conf:/etc/nginx/nginx.conf:ro
+     #note: following folder need to have permission
+      - /opt/apzohub/apserver/webapp:/etc/nginx/html:ro
+      - /opt/apzohub/apserver/webapp:/usr/share/nginx/html:ro
+
+  
+
+
+  
