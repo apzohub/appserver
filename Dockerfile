@@ -1,6 +1,6 @@
 FROM node:lts-bullseye-slim
 
-ENV APSERVER_VERSION 1.0.0
+ENV APSERVER_VERSION 0.7.5
 ENV APSERVER_HOME /opt/apzohub/apserver
 
 WORKDIR $APSERVER_HOME

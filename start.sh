@@ -1,3 +1,3 @@
 #!/bin/bash
 
-node Server.js
+node -r dotenv/config src/server.js

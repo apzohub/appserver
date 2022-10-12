@@ -1,6 +1,6 @@
 {
   "name": "apserver",
-  "version": "1.0.0",
+  "version": "0.7.5",
   "description": "Server",
   "main": "Server.js",
   "scripts": {
@@ -10,27 +10,37 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apzohub/ahserver.git"
+    "url": "git+https://github.com/apzohub/apserver.git"
   },
   "keywords": [
     "apzohub",
     "server"
   ],
   "author": "apzohub",
-  "license": "ISC",
+  "license": "Apache 2.0",
   "bugs": {
-    "url": "https://github.com/apzohub/ahserver/issues"
+    "url": "https://github.com/apzohub/apserver/issues"
   },
-  "homepage": "https://github.com/apzohub/ahserver#readme",
+  "homepage": "https://github.com/apzohub/apserver#readme",
   "dependencies": {
+    "connect-timeout": "^1.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-graphql": "^0.12.0",
+    "express-rate-limit": "^6.6.0",
+    "express-session": "^1.17.3",
     "helmet": "^6.0.0",
+    "joi": "^17.6.3",
+    "method-override": "^3.0.0",
     "mongodb": "^4.10.0",
     "passport": "^0.6.0",
-    "redis": "^4.3.1"
+    "rate-limit-redis": "^3.0.1",
+    "redis": "^4.3.1",
+    "swagger-ui-express": "^4.5.0"
   },
   "devDependencies": {
-    "liquibase": "^4.4.0"
+    "liquibase": "^4.4.0",
+    "nodemon": "^2.0.20"
   }
 }
