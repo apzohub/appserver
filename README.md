@@ -9,6 +9,8 @@ This is a base server template to start backend servers. Add you own RESTful rou
 - Validation
 
 
+TODO: create npx command to use this as template stating point
+
 # Contributions?
 Contributions are highly welcome. If you're interested in contributing please leave a note with your username.
 

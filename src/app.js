@@ -21,11 +21,14 @@ app.use(express.urlencoded({ extended: false }));
 //Security
 app.use(helmet());
 app.disable('x-powered-by');
+app.disable('etag');
 
+// cors
 //https://expressjs.com/en/resources/middleware/cors.html
 app.use(cors());
 // app.options('*', cors()); 
 
+//session
 let sess = {
   secret: 'ap whildcat',
   resave: false,
@@ -39,17 +42,24 @@ if (env === 'prod') {
   sess.cookie.secure = true; 
   sess.httpOnly = true;
 }
-
 app.use(session(sess));
 
+//static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/favicon.ico|/robots.txt', (req, res) => {
+  res.status(404).send(null);
+});
 
+
+
+//OpenAPI / Swagger
 if(process.env.OPEN_API === 'true'){
   const openapi = require('./services/openapi');
   app.use('/', openapi);
 }
 
+//GraphQL
 if(process.env.GRAPHQL === 'true'){
 
   const { graphqlHTTP } = require('express-graphql');
@@ -62,8 +72,14 @@ if(process.env.GRAPHQL === 'true'){
   }));
 }
 
-const routes = require('./routes');
+/**
+ * Custom routes
+ * Update/Replace services/routes.js with the required routes.
+ * TODO: create npx command to use this as template stating point
+ */
+const routes = require('./services/routes');
 app.use('/', routes);
+
 
 // Error handlers
 app.use((req, res, next) => {
