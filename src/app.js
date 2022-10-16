@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const passport = require('passport');
 const path = require('path');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -24,9 +25,28 @@ app.disable('x-powered-by');
 app.disable('etag');
 
 // cors
-//https://expressjs.com/en/resources/middleware/cors.html
-app.use(cors());
-app.options('*', cors()); 
+if(process.env.CORS == 'true'){
+  var corsOpt = {
+    origin: process.env.WEBAPP_URL
+  }
+  app.use(cors(corsOpt)); 
+  //app.options('*', cors(corsOpt));
+  /* app.options('/*', cors(corsOpt), (req, res) => {
+    res.sendStatus(200);
+  });*/
+}
+/* 
+  app.use((req, res, next) => {
+    console.log('option', req.headers);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.setHeader("Access-Control-Allow-Methods","GET, POST, PATCH, PUT, DELETE, OPTIONS");
+    next();
+  });
+  app.options('/*', (req, res) => {
+    res.sendStatus(204);
+  });
+*/
 
 //session
 let sess = {
@@ -43,6 +63,14 @@ if (env === 'prod') {
   sess.httpOnly = true;
 }
 app.use(session(sess));
+
+//simple req logger - use morgan instead for example
+app.use((req, res, next)=>{
+  if(process.env.LOG == 'DEBUG'){
+    console.log(req.method, ' ', req.url);
+  }
+  next();
+});
 
 //static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -74,7 +102,12 @@ if(process.env.GRAPHQL === 'true'){
 
 
 //Auth
-const passport = require('passport');
+/* app.use((req, res, next)=>{
+  if(req.path.startsWith('/api')){
+    return passport.authenticate('session');
+  }
+  next();
+}) */
 // app.use(passport.authenticate('session'));
 
 const auth = require('./auth/auth');
