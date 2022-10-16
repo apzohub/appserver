@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/apzohub/apserver#readme",
   "dependencies": {
+    "connect-ensure-login": "^0.1.1",
     "connect-timeout": "^1.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
@@ -35,6 +36,8 @@
     "method-override": "^3.0.0",
     "mongodb": "^4.10.0",
     "passport": "^0.6.0",
+    "passport-local": "^1.0.0",
+    "passport-magic-link": "^2.1.0",
     "rate-limit-redis": "^3.0.1",
     "redis": "^4.3.1",
     "swagger-ui-express": "^4.5.0"

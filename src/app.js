@@ -26,7 +26,7 @@ app.disable('etag');
 // cors
 //https://expressjs.com/en/resources/middleware/cors.html
 app.use(cors());
-// app.options('*', cors()); 
+app.options('*', cors()); 
 
 //session
 let sess = {
@@ -71,6 +71,14 @@ if(process.env.GRAPHQL === 'true'){
     graphiql: true,
   }));
 }
+
+
+//Auth
+const passport = require('passport');
+// app.use(passport.authenticate('session'));
+
+const auth = require('./auth/auth');
+app.use('/', auth);
 
 /**
  * Custom routes
