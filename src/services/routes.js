@@ -1,6 +1,8 @@
 /**
  * All routes must be define here, below is a place holder only
  */
+const CONF = require('../utils/conf');
+const logger = require('../utils/logger');
 const router = require('express').Router();
 // const joi = require('joi');
 

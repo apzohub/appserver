@@ -1,0 +1,39 @@
+{
+    "env":"dev",
+    "app": {
+        "name":"exampleApp",
+        "host":"localhost",
+        "port":"8443",
+        "webapp_url":"http://localhost:4200",
+        "cors": true,
+        "email":"contact@example.com",
+        "stack":""
+    },
+    
+    "opt":{
+        "rate_limit":false,
+        "open_api":true,
+        "graphql": true
+    },
+    
+    "db":{
+        "host":"localhost",
+        "port":"5252",
+        "database":"apdb",
+        "usr":"see .env",
+        "pwd":"see .env",
+        "ssl": false,
+        "pool":{
+            "max":10,
+            "idle":1000,
+            "con_time_out":1000,
+            "maxusrs": 1000
+        }
+    },
+    "services":{
+        "auth":{
+            
+        }
+    }
+    
+}

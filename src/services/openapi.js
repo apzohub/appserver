@@ -1,4 +1,6 @@
-if(process.env.OPEN_API === 'true'){
+const CONF = require('../utils/conf');
+
+if(CONF.opt.open_api === 'true'){
 
     const router = require('express').Router();
     const asyncFn = require('../com');

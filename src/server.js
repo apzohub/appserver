@@ -1,3 +1,4 @@
+const CONF = require('./utils/conf');
 const fs = require('fs');
 const https = require('https');
 const privateKey  = fs.readFileSync('etc/cert/localhostkey.pem', 'utf8');
@@ -7,8 +8,8 @@ const cert = {key: privateKey, cert: certificate};
 
 const app = require('./app');
 
-const HOST = process.env.HOST || 'localhost';
-const PORT = process.env.PORT || '8443';
+const HOST = CONF.app.host || 'localhost';
+const PORT = CONF.app.port || '8443';
 
 let server = https.createServer(cert, app);
 server.listen(PORT, HOST, () => {

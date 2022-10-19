@@ -1,3 +1,6 @@
+
+const CONF = require('./utils/conf');
+const logger = require('./utils/logger');
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
@@ -8,7 +11,6 @@ const cors = require('cors');
 
 const methodOverride = require('method-override');
 
-// console.log(process.env);
 const env = process.env.NODE_ENV; // 'dev' or 'prod'
 
 const app = express();
@@ -25,9 +27,9 @@ app.disable('x-powered-by');
 app.disable('etag');
 
 // cors
-if(process.env.CORS == 'true'){
+if(CONF.app.cors == 'true'){
   var corsOpt = {
-    origin: process.env.WEBAPP_URL
+    origin: CONF.app.webapp_url
   }
   app.use(cors(corsOpt)); 
   //app.options('*', cors(corsOpt));
@@ -66,9 +68,7 @@ app.use(session(sess));
 
 //simple req logger - use morgan instead for example
 app.use((req, res, next)=>{
-  if(process.env.LOG == 'DEBUG'){
-    console.log(req.method, ' ', req.url);
-  }
+  logger.debug(`${req.method} ${req.url}`);
   next();
 });
 
@@ -82,13 +82,13 @@ app.use('/favicon.ico|/robots.txt', (req, res) => {
 
 
 //OpenAPI / Swagger
-if(process.env.OPEN_API === 'true'){
+if(CONF.opt.open_api === 'true'){
   const openapi = require('./services/openapi');
   app.use('/', openapi);
 }
 
 //GraphQL
-if(process.env.GRAPHQL === 'true'){
+if(CONF.opt.graphql === 'true'){
 
   const { graphqlHTTP } = require('express-graphql');
 
@@ -102,15 +102,15 @@ if(process.env.GRAPHQL === 'true'){
 
 
 //Auth
-/* app.use((req, res, next)=>{
+app.use((req, res, next)=>{
   if(req.path.startsWith('/api')){
-    return passport.authenticate('session');
+    return passport.authenticate('bearer', { session: false });
   }
   next();
-}) */
+})
 // app.use(passport.authenticate('session'));
 
-const auth = require('./auth/auth');
+const auth = require('./services/auth');
 app.use('/', auth);
 
 /**
@@ -128,7 +128,7 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(err.stack);
   res.status(500).send({err:'Opps something went wrong!'});
 });
 
