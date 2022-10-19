@@ -1,8 +1,10 @@
 const CONF = require('../utils/conf');
-const logger = require('../utils/logger');
 const uuid = require('uuid').v4;
 const { Pool } = require('pg');
+const { Entity } = require('./entity');
 
+const { Logger } = require('../utils/logger');
+const logger = new Logger('RepoService');
 
 const pool = new Pool({
     host: CONF.db.host,
@@ -22,133 +24,121 @@ pool.on('error', (err, client) => {
     //process.exit(-1)
 })
 
+class Table{
+    static CREATE='create';
+    static READ='read';
+    static UPDATE='update';
+    static DELETE='delete';
+    name;
+    cols;
+    dmls;
+    constructor(name, cols, dmls){
+        this.name = name; 
+        this.cols = cols;
+        this.dmls = dmls;
+    }
+
+    getDML(type){
+        return this.dmls[type];
+    }
+}
+
 class RepoService{
     constructor(tab){
         this.tab = tab;
     }
 
     async read(id){
-        const client = await pool.connect();
         try{
-            let res = await client.query("select * from users");
-            return res.rows.length > 0 ?res.rows[0]:null;
+            let ret = await this.exec(tab.getDML(Table.READ), [id]);
+            return ret.length > 0 ?ret[0]:null;
         } catch (error) {
-            console.error(error)
-            throw new Error("Not Found");
-        }finally{
-            client.release();
+            throw new Error(`Not Found ${id}`);
         }
     }
 
     async create(entity){
-        return this.exec(entity);
-    }
-
-    async exec(entity){
-        const client = await pool.connect();
         try{
-            let res = await client.query("insert into users(id, email) values(?, ?)", entity);
-            return res.rows.length > 0 ?res.rows[0]:null;
+            Entity.init(entity);
+            let ret = await this.exec(tab.getDML(Table.CREATE), this.toArr(entity));
+            return ret.length > 0 ?ret[0]:null;
         } catch (error) {
-            console.error(error)
-            throw new Error("Not Found");
-        }finally{
-            client.release();
+            throw new Error(`Failed creating entity ${entity.id}`);
         }
     }
 
     async update(entity){
-        const client = await pool.connect();
         try{
-            let res = await client.query("insert into users(id, email) values(?, ?)", entity);
-            return res.rows.length > 0 ?res.rows[0]:null;
+            entity["updated"] = new Date();
+            let ret = await this.exec(tab.getDML(Table.UPDATE), this.toArr(entity));
+            return ret.length > 0 ?ret[0]:null;
         } catch (error) {
-            console.error(error)
-            throw new Error("Not Found");
-        }finally{
-            client.release();
+            throw new Error(`Not Found ${entity.id}`);
         }
     }
 
+    //entity could be object or id
     async delete(entity){
-        const client = await pool.connect();
+        const id = typeof entity === 'string'?entity:entity.id;
         try{
-            let res = await client.query("insert into users(id, email) values(?, ?)", entity);
-            return res.rows.length > 0 ?res.rows[0]:null;
+            let ret = await this.exec(tab.getDML(Table.DELETE), [id]);
+            return ret.length > 0 ?ret[0]:null;
         } catch (error) {
-            console.error(error)
-            throw new Error("Not Found");
-        }finally{
-            client.release();
+            throw new Error(`Not Found ${id}`);
+        }
+    }
+
+    //logical delete
+    async ldelete(entity){
+        const id = typeof entity === 'string'?entity:entity.id;
+        try{
+            return await this.exec(`update ${tab.name} set state=$1, updated=$2 where id=$3`,
+                  [Entity.DEL, new Date(), id]);
+        } catch (error) {
+            throw new Error(`Not Found ${id}`);
         }
     }
 
     async find(query, params){
+        try{
+            return await this.exec(query, params);
+        } catch (error) {
+            throw new Error("Not Found");
+        }
+    }
+
+    async exec(query, params){
         const client = await pool.connect();
         try{
-            let res = await client.query("insert into users(id, email) values(?, ?)", entity);
-            return res.rows.length > 0 ?res.rows[0]:null;
+            logger.debug(query, params);
+            await client.query('BEGIN');
+            let res = await client.query(query, params);
+            await client.query('COMMIT');
+            return res.rows;
         } catch (error) {
-            console.error(error)
-            throw new Error("Not Found");
+            console.error(error);
+            await client.query('ROLLBACK')
+            throw error;
         }finally{
             client.release();
         }
     }
 
-
-    async dbtest(){
-
-        const client = await pool.connect();
-        try {
-            
-    
-            let id = uuid();
-            let res = await client.query("INSERT INTO users (id, email) VALUES ($1, $2)",
-              [id, id+'@bar.com']
-            );
-            console.log(`Added ${res}`);
-    
-            res = await client.query("select * from users");
-            console.log(`data: ${JSON.stringify(res.rows)}`);
-          } catch (error) {
-            console.error(error)
-          }finally{
-            client.release();
-          }
-    }
-    
-    async dbtestTrx(){
-    
-        const client = await pool.connect();
-        try {
-            await client.query('BEGIN')
-    
-            let id = uuid();
-            let res = await client.query(
-              "INSERT INTO users (id, email) VALUES ($1, $2)",
-              [id, id+'@bar.com']
-            );
-            console.log(`Added ${res}`);
-    
-            res = await client.query("select * from users");
-            console.log(`data: ${JSON.stringify(res.rows)}`);
-    
-            await client.query('COMMIT')
-          } catch (error) {
-            console.error(error);
-            await client.query('ROLLBACK')
-            throw error;
-          }finally{
-            client.release();
-          }
+    toArr(params){
+        let ret = [];
+        //console.log(this.tab.cols, params);
+        this.tab.cols.forEach(element => {
+            ret.push(params[element]);
+        });
+        //console.log(ret)
+        return ret;
     }
 }
 
 
 
-/* let rs = new RepoService();
-rs.dbtest();
-rs.dbtestTrx(); */
 
-module.exports = RepoService;
+module.exports = {
+    Table,
+    RepoService
+};

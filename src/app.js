@@ -1,6 +1,5 @@
 
 const CONF = require('./utils/conf');
-const logger = require('./utils/logger');
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
@@ -8,6 +7,8 @@ const path = require('path');
 const helmet = require('helmet');
 const cors = require('cors');
 //const timeout = require('connect-timeout')
+const { Logger } = require('./utils/logger');
+const logger = new Logger('RepoService');
 
 const methodOverride = require('method-override');
 

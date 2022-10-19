@@ -3,7 +3,6 @@
  * support 2FA (MFA), SSO.
  */
 const CONF = require('../utils/conf');
-const logger = require('../utils/logger');
 const router = require('express').Router();
 const asyncFn = require('../com');
 // const joi = require('joi');
@@ -15,6 +14,9 @@ const MagicLinkStrategy = require('passport-magic-link').Strategy;
 const BearerStrategy = require('passport-http-bearer').Strategy;
 const oauth2orize = require('oauth2orize');
 const login = require('connect-ensure-login');
+
+const { Logger } = require('../utils/logger');
+const logger = new Logger('RepoService');
 
 
 passport.use(new LocalStrategy((email, password, cb) => {

@@ -2,9 +2,11 @@
  * All routes must be define here, below is a place holder only
  */
 const CONF = require('../utils/conf');
-const logger = require('../utils/logger');
 const router = require('express').Router();
 // const joi = require('joi');
+
+const { Logger } = require('../utils/logger');
+const logger = new Logger('RepoService');
 
 const asyncFn = require('../com');
 
