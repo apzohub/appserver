@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 const { Entity } = require('./entity');
 
 const { Logger } = require('../utils/logger');
-const logger = new Logger('RepoService');
+const logger = new Logger(module);//'RepoService'
 
 const pool = new Pool({
     host: CONF.db.host,
@@ -50,8 +50,8 @@ class RepoService{
 
     async read(id){
         try{
-            let ret = await this.exec(tab.getDML(Table.READ), [id]);
-            return ret.length > 0 ?ret[0]:null;
+            let res = await this.exec(tab.getDML(Table.READ), [id]);
+            return res.rowCount > 0 ?res.rows[0]:null; //must be unique
         } catch (error) {
             throw new Error(`Not Found ${id}`);
         }
@@ -60,9 +60,9 @@ class RepoService{
     async create(entity){
         try{
             Entity.init(entity);
-            let ret = await this.exec(tab.getDML(Table.CREATE), this.toArr(entity));
-            logger.debug(ret);
-            return ret.length > 0 ?ret[0]:null;
+            let res = await this.exec(tab.getDML(Table.CREATE), this.toArr(entity));
+            logger.debug(res);
+            return res.rowCount;
         } catch (error) {
             throw new Error(`Failed creating entity ${entity.id}`);
         }
@@ -71,8 +71,8 @@ class RepoService{
     async update(entity){
         try{
             entity["updated"] = new Date();
-            let ret = await this.exec(tab.getDML(Table.UPDATE), this.toArr(entity));
-            return ret.length > 0 ?ret[0]:null;
+            let res = await this.exec(tab.getDML(Table.UPDATE), [...this.toArr(entity), entity.id]);
+            return res.rowCount;
         } catch (error) {
             throw new Error(`Not Found ${entity.id}`);
         }
@@ -82,8 +82,8 @@ class RepoService{
     async delete(entity){
         const id = typeof entity === 'string'?entity:entity.id;
         try{
-            let ret = await this.exec(tab.getDML(Table.DELETE), [id]);
-            return ret.length > 0 ?ret[0]:null;
+            let res = await this.exec(tab.getDML(Table.DELETE), [id]);
+            return res.rowCount;
         } catch (error) {
             throw new Error(`Not Found ${id}`);
         }
@@ -93,8 +93,9 @@ class RepoService{
     async ldelete(entity){
         const id = typeof entity === 'string'?entity:entity.id;
         try{
-            return await this.exec(`update ${tab.name} set state=$1, updated=$2 where id=$3`,
+            let res = await this.exec(`update ${tab.name} set state=$1, updated=$2 where id=$3`,
                   [Entity.DEL, new Date(), id]);
+            return res.rowCount;
         } catch (error) {
             throw new Error(`Not Found ${id}`);
         }
@@ -102,7 +103,8 @@ class RepoService{
 
     async find(query, params){
         try{
-            return await this.exec(query, params);
+            let res = await this.exec(query, params);
+            return res.rowCount > 0? res.rows: [];
         } catch (error) {
             throw new Error("Not Found");
         }
@@ -115,10 +117,10 @@ class RepoService{
             await client.query('BEGIN');
             let res = await client.query(query, params);
             await client.query('COMMIT');
-            logger.debug(res.rowCount, res.rows[0]);
-            return res.rows;
+            //logger.debug(res);
+            return res;
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             await client.query('ROLLBACK')
             throw error;
         }finally{

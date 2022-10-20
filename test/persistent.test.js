@@ -40,6 +40,16 @@ let testFind = async ()=>{
     };
 }
 
+let testFind2 = async (q)=>{
+    console.log('testFind')
+    try{
+        let ret = await rs.find(q);
+        console.log(`testFind: ${JSON.stringify(ret)}`);
+    }catch(e){
+        console.error(e)
+    };
+}
+
 let testFindByEmail = async (email)=>{
     console.log('testFindByEmail')
     try{
@@ -55,6 +65,21 @@ let testRead = async (id)=>{
     try{
         let ret = await rs.read(id);
         console.log(`testRead: ${JSON.stringify(ret)}`);
+    }catch(e){
+        console.error(e)
+    };
+}
+
+let testUpdate = async (id)=>{
+    console.log('testUpdate')
+    try{
+        let entity = await rs.read(id);
+        if(!entity) throw new Error(`Not Found ${id}`);
+        entity['state'] = Entity.ACTIVE;
+        let ret = await rs.update(entity);
+        console.log(`testUpdate: ${JSON.stringify(ret)}`);
+        let ret2 = await rs.read(id);
+        console.log(`testRead: ${JSON.stringify(ret2)}`);
     }catch(e){
         console.error(e)
     };
@@ -83,12 +108,13 @@ let testLDelete = async (p)=>{
 console.log('/////////////');
 let id = IdGen.strId();
 let email = id + '@bar.com';
-// testCreate(new Users(email, 'xyz'));
-testCreate2(new Users(email, 'xyz'));
-/* testFind();
+testCreate(new Users(email, 'xyz'));
+// testCreate2(new Users(email, 'xyz'));
+testFind2(`select * from users where email='xyz'`);
 testFindByEmail(email);
-testRead(id);
+testUpdate('112a123f-9606-4bdb-9671-6ccc83864df9');
+testRead('112a123f-9606-4bdb-9671-6ccc83864df');
 testLDelete(id);
 testRead(id);
 testDelete(id);
-testRead(id); */
+testRead(id); 
