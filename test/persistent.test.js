@@ -1,6 +1,6 @@
 const { Entity, Users } = require('../src/services/entity');
 const {Table, RepoService} = require('../src/services/persistent');
-const {Id} = require('../src/utils/id');
+const {IdGen} = require('../src/utils/id');
 
 tab = new Table('users', 
         ['id', 'email', 'password', 'kv', 'state', 'created', 'updated'], 
@@ -23,6 +23,11 @@ let testCreate = async (entity)=>{
     }catch(e){
         console.error(e)
     };
+}
+
+let testCreate2 = (entity)=>{
+    console.log('testCreate2')
+    rs.create(entity).then((ret) => console.log(`created: ${JSON.stringify(ret)}`));
 }
 
 let testFind = async ()=>{
@@ -76,9 +81,10 @@ let testLDelete = async (p)=>{
 }
 
 console.log('/////////////');
-let id = Id.strId();
+let id = IdGen.strId();
 let email = id + '@bar.com';
-testCreate(new Users(email, 'xyz'));
+// testCreate(new Users(email, 'xyz'));
+testCreate2(new Users(email, 'xyz'));
 /* testFind();
 testFindByEmail(email);
 testRead(id);

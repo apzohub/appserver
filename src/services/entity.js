@@ -1,4 +1,4 @@
-const {Id} = require('../utils/id');
+const {IdGen} = require('../utils/id');
 
 //Base Entity
 class Entity{
@@ -14,7 +14,7 @@ class Entity{
     }
 
     static init(entity){
-        entity.id=Id.uuid();
+        entity.id=IdGen.uuid();
         entity.state=Entity.INACTIVE;
         const date = new Date();
         entity.created=date;

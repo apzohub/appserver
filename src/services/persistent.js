@@ -61,6 +61,7 @@ class RepoService{
         try{
             Entity.init(entity);
             let ret = await this.exec(tab.getDML(Table.CREATE), this.toArr(entity));
+            logger.debug(ret);
             return ret.length > 0 ?ret[0]:null;
         } catch (error) {
             throw new Error(`Failed creating entity ${entity.id}`);
@@ -110,10 +111,11 @@ class RepoService{
     async exec(query, params){
         const client = await pool.connect();
         try{
-            logger.debug(query, params);
+            logger.debug(query);//, params);
             await client.query('BEGIN');
             let res = await client.query(query, params);
             await client.query('COMMIT');
+            logger.debug(res.rowCount, res.rows[0]);
             return res.rows;
         } catch (error) {
             console.error(error);
