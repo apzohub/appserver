@@ -1,3 +1,5 @@
+-- database initilization script
+
 CREATE ROLE apusr WITH
 	LOGIN
 	NOSUPERUSER

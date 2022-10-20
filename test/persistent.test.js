@@ -5,8 +5,7 @@ const {IdGen} = require('../src/utils/id');
 tab = new Table('users', 
         ['id', 'email', 'password', 'kv', 'state', 'created', 'updated'], 
         {
-            create:'insert into users(id, email, password, kv, state, created, updated)\
-                    values($1, $2, $3, $4, $5, $6, $7)',
+            create:'insert into users(id, email, password, kv, state, created, updated) values($1, $2, $3, $4, $5, $6, $7)',
             read:'select * from users where id=$1',
             update:'update users set id=$1, email=$2, password=$3, kv=$4, state=$5, created=$6, updated=$7 where id =$8',
             delete:'delete from users where id=$1',
@@ -16,10 +15,11 @@ tab = new Table('users',
 let rs = new RepoService(tab);
 
 let testCreate = async (entity)=>{
-    console.log('testCreate')
     try{
         let ret = await rs.create(entity);
         console.log(`created: ${JSON.stringify(ret)}`);
+        ret = await rs.read(entity.id);
+        if(!ret) throw new Error(`Not Found ${id}`);
     }catch(e){
         console.error(e)
     };
@@ -33,7 +33,7 @@ let testCreate2 = (entity)=>{
 let testFind = async ()=>{
     console.log('testFind')
     try{
-        let ret = await rs.find("select * from users");
+        let ret = await rs.find("");
         console.log(`testFind: ${JSON.stringify(ret)}`);
     }catch(e){
         console.error(e)
@@ -53,7 +53,7 @@ let testFind2 = async (q)=>{
 let testFindByEmail = async (email)=>{
     console.log('testFindByEmail')
     try{
-        let ret = await rs.find("select * from users where email=$1", [email]);
+        let ret = await rs.find("email=$1", [email]);
         console.log(`testFindByEmail: ${JSON.stringify(ret)}`);
     }catch(e){
         console.error(e)
@@ -110,11 +110,11 @@ let id = IdGen.strId();
 let email = id + '@bar.com';
 testCreate(new Users(email, 'xyz'));
 // testCreate2(new Users(email, 'xyz'));
-testFind2(`select * from users where email='xyz'`);
+/* testFind2(`select * from users where email='xyz'`);
 testFindByEmail(email);
 testUpdate('112a123f-9606-4bdb-9671-6ccc83864df9');
 testRead('112a123f-9606-4bdb-9671-6ccc83864df');
 testLDelete(id);
 testRead(id);
 testDelete(id);
-testRead(id); 
+testRead(id);  */

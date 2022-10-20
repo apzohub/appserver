@@ -5,36 +5,43 @@ const { combine, timestamp, label, printf } = winston.format;
 
 class Logger{
     ctx;
-    constructor(ctx, file){
+    constructor(ctx){
         if(typeof ctx !== 'string') ctx = '-*-';
         this.ctx = ctx;
         Logger.init();
     }
 
     error(msg, ...prms){
-        Logger.logger.error(`${this.ln()} - ${msg}`);
+        Logger.logger.error(`${Logger.ln()} - ${msg}${Logger.toStr(prms)}`);
     }
 
     warn(msg, ...prms){
-        Logger.logger.warn(`${this.ln()} - ${msg}`);
+        Logger.logger.warn(`${Logger.ln()} - ${msg}${Logger.toStr(prms)}`);
     }
 
     debug(msg, ...prms){
-        Logger.logger.debug(`${this.ln()} - ${msg}`, prms);
+        Logger.logger.debug(`${Logger.ln()} - ${msg}${Logger.toStr(prms)}`);
     }
     
     info(msg, ...prms){
-        Logger.logger.info(`${this.ln()} - ${msg}`);
+        Logger.logger.info(`${Logger.ln()} - ${msg}${Logger.toStr(prms)}`);
     }
 
-    ln(){
+    static ln(){
         let file = new Error().stack.split('\n')[3];
         let frags = file.split(path.sep);
-        return `[${this.ctx}] (${frags[frags.length - 2]}/${frags.pop()}`;
+        return `${this.ctx?`[${this.ctx}]`:''} (${frags[frags.length - 2]}/${frags.pop()}`;
+    }
+
+    static toStr(prms){
+        if(prms.length == 0) return '';
+        return ` - ${JSON.stringify(prms)}`;
     }
 
     static logger;
     static init(){
+        if(Logger.logger) return;
+        console.log('init logger');
         Logger.logger = winston.createLogger({
             level: process.env.NODE_ENV=='dev'?'debug':'info',
             // format: winston.format.json(),
@@ -42,7 +49,7 @@ class Logger{
                 // label({ label: this.label(ctx, file) }),
                 timestamp(),
                 printf(({ level, message, label, timestamp }) => {
-                    return `${timestamp} ${level}: ${message}`;
+                    return `${timestamp} ${level.toUpperCase()}: ${message}`;
                 })),
             defaultMeta: { service: 'user-service' },
             transports: [

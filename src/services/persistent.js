@@ -61,7 +61,7 @@ class RepoService{
         try{
             Entity.init(entity);
             let res = await this.exec(tab.getDML(Table.CREATE), this.toArr(entity));
-            logger.debug(res);
+            //logger.debug(res);
             return res.rowCount;
         } catch (error) {
             throw new Error(`Failed creating entity ${entity.id}`);
@@ -101,8 +101,9 @@ class RepoService{
         }
     }
 
-    async find(query, params){
+    async find(cond, params){
         try{
+            let query = `select * from ${this.tab.name} ${cond?`where ${cond}`:''}`;
             let res = await this.exec(query, params);
             return res.rowCount > 0? res.rows: [];
         } catch (error) {
@@ -135,7 +136,7 @@ class RepoService{
             ret.push(params[element]);
         });
         //console.log(ret)
-        return ret;
+        return ret; 
     }
 }
 
