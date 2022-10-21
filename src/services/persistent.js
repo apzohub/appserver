@@ -32,14 +32,37 @@ class Table{
     name;
     cols;
     dmls;
-    constructor(name, cols, dmls){
+    constructor(name, cols){
         this.name = name; 
         this.cols = cols;
-        this.dmls = dmls;
+        this.dmls = Table.init(name, cols);
     }
 
     getDML(type){
         return this.dmls[type];
+    }
+
+    static init(name, cols){
+        let ins='', set='', values='';
+        for(let i=1; i<=cols.length; i++){
+            if(i > 1) {
+                ins += ','
+                values += ',';
+                set += ',';
+            }
+            ins += `${cols[i-1]}`;
+            values += `$${i}`;
+            set += `${cols[i-1]}=$${i}`;
+        }
+        
+        const dmls = {
+            create:`insert into ${name}(${ins}) values(${values})`,
+            read:`select * from ${name} where id=$1`,
+            update:`update ${name} set ${set} where id=$1`,
+            delete:`delete from ${name} where id=$1`,
+        }
+        //console.log(dmls);
+        return dmls;
     }
 }
 
@@ -71,7 +94,7 @@ class RepoService{
     async update(entity){
         try{
             entity["updated"] = new Date();
-            let res = await this.exec(tab.getDML(Table.UPDATE), [...this.toArr(entity), entity.id]);
+            let res = await this.exec(tab.getDML(Table.UPDATE), [...this.toArr(entity)]);
             return res.rowCount;
         } catch (error) {
             throw new Error(`Not Found ${entity.id}`);
@@ -94,7 +117,7 @@ class RepoService{
         const id = typeof entity === 'string'?entity:entity.id;
         try{
             let res = await this.exec(`update ${tab.name} set state=$1, updated=$2 where id=$3`,
-                  [Entity.DEL, new Date(), id]);
+                  [Entity.DELETED, new Date(), id]);
             return res.rowCount;
         } catch (error) {
             throw new Error(`Not Found ${id}`);
@@ -132,9 +155,7 @@ class RepoService{
     toArr(params){
         let ret = [];
         //console.log(this.tab.cols, params);
-        this.tab.cols.forEach(element => {
-            ret.push(params[element]);
-        });
+        this.tab.cols.forEach(elm => ret.push(params[elm]));
         //console.log(ret)
         return ret; 
     }

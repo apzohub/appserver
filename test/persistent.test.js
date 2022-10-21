@@ -3,18 +3,15 @@ const {Table, RepoService} = require('../src/services/persistent');
 const {IdGen} = require('../src/utils/id');
 
 tab = new Table('users', 
-        ['id', 'email', 'password', 'kv', 'state', 'created', 'updated'], 
-        {
-            create:'insert into users(id, email, password, kv, state, created, updated) values($1, $2, $3, $4, $5, $6, $7)',
-            read:'select * from users where id=$1',
-            update:'update users set id=$1, email=$2, password=$3, kv=$4, state=$5, created=$6, updated=$7 where id =$8',
-            delete:'delete from users where id=$1',
-        }
-     );
+        ['id', 'email', 'password', 'kv', 'state', 'created', 'updated']
+      );
 
-let rs = new RepoService(tab);
+const rs = new RepoService(tab);
 
-let testCreate = async (entity)=>{
+const id = IdGen.strId();
+const email = id + '@bar.com';
+
+const testCreate = async (entity)=>{
     try{
         let ret = await rs.create(entity);
         console.log(`created: ${JSON.stringify(ret)}`);
@@ -25,12 +22,12 @@ let testCreate = async (entity)=>{
     };
 }
 
-let testCreate2 = (entity)=>{
+const testCreate2 = (entity)=>{
     console.log('testCreate2')
     rs.create(entity).then((ret) => console.log(`created: ${JSON.stringify(ret)}`));
 }
 
-let testFind = async ()=>{
+const testFind = async ()=>{
     console.log('testFind')
     try{
         let ret = await rs.find("");
@@ -40,7 +37,7 @@ let testFind = async ()=>{
     };
 }
 
-let testFind2 = async (q)=>{
+const testFind2 = async (q)=>{
     console.log('testFind')
     try{
         let ret = await rs.find(q);
@@ -50,7 +47,7 @@ let testFind2 = async (q)=>{
     };
 }
 
-let testFindByEmail = async (email)=>{
+const testFindByEmail = async (email)=>{
     console.log('testFindByEmail')
     try{
         let ret = await rs.find("email=$1", [email]);
@@ -60,7 +57,7 @@ let testFindByEmail = async (email)=>{
     };
 }
 
-let testRead = async (id)=>{
+const testRead = async (id)=>{
     console.log('testRead')
     try{
         let ret = await rs.read(id);
@@ -70,7 +67,7 @@ let testRead = async (id)=>{
     };
 }
 
-let testUpdate = async (id)=>{
+const testUpdate = async (id)=>{
     console.log('testUpdate')
     try{
         let entity = await rs.read(id);
@@ -85,7 +82,7 @@ let testUpdate = async (id)=>{
     };
 }
 
-let testDelete = async (p)=>{
+const testDelete = async (p)=>{
     console.log('testDelete')
     try{
         let ret = await rs.delete(p);
@@ -95,7 +92,7 @@ let testDelete = async (p)=>{
     };
 }
 
-let testLDelete = async (p)=>{
+const testLDelete = async (p)=>{
     console.log('testLDelete')
     try{
         let ret = await rs.ldelete(p);
@@ -105,10 +102,87 @@ let testLDelete = async (p)=>{
     };
 }
 
+const testAll = async () =>{
+    let entity = new Users(email, 'xyz');
+    const id = entity.id;
+    console.log('testCreate->')
+    try{
+        let ret = await rs.create(entity);
+        console.log(`created: ${JSON.stringify(ret)}`);
+        ret = await rs.read(entity.id);
+        if(!ret) throw new Error(`Not Found ${id}`);
+    }catch(e){
+        console.error(e)
+    };
+
+    console.log('testRead->')
+    try{
+        let ret = await rs.read(id);
+        console.log(`read: ${JSON.stringify(ret)}`);
+    }catch(e){
+        console.error(e)
+    };
+
+    console.log('testFind')
+    try{
+        let ret = await rs.find("");
+        console.log(`found: ${JSON.stringify(ret)}`);
+    }catch(e){
+        console.error(e)
+    };
+
+    console.log('testFind')
+    try{
+        let ret = await rs.find(`email='xyz'`);
+        console.log(`found: ${JSON.stringify(ret)}`);
+    }catch(e){
+        console.error(e)
+    };
+
+    console.log('testFindByEmail')
+    try{
+        let ret = await rs.find("email=$1", [email]);
+        console.log(`foundByEmail: ${JSON.stringify(ret)}`);
+    }catch(e){
+        console.error(e)
+    };
+
+    console.log('testUpdate')
+    try{
+        let entity = await rs.read(id);
+        if(!entity) throw new Error(`Not Found ${id}`);
+        entity['state'] = Entity.ACTIVE;
+        let ret = await rs.update(entity);
+        console.log(`updated: ${JSON.stringify(ret)}`);
+        let ret2 = await rs.read(id);
+        console.log(`read: ${JSON.stringify(ret2)}`);
+    }catch(e){
+        console.error(e)
+    };
+    
+    console.log('testLDelete')
+    try{
+        let ret = await rs.ldelete(id);
+        console.log(`Ldeleted: ${JSON.stringify(ret)}`);
+        let ret2 = await rs.read(id);
+        console.log(`read: ${JSON.stringify(ret2)}`);
+    }catch(e){
+        console.error(e)
+    };
+
+    console.log('testDelete')
+    try{
+        let ret = await rs.delete(id);
+        console.log(`deleted: ${JSON.stringify(ret)}`);
+        let ret2 = await rs.read(id);
+        console.log(`read: ${JSON.stringify(ret2)}`);
+    }catch(e){
+        console.error(e)
+    };
+}
+
 console.log('/////////////');
-let id = IdGen.strId();
-let email = id + '@bar.com';
-testCreate(new Users(email, 'xyz'));
+// testCreate(new Users(email, 'xyz'));
 // testCreate2(new Users(email, 'xyz'));
 /* testFind2(`select * from users where email='xyz'`);
 testFindByEmail(email);
@@ -118,3 +192,7 @@ testLDelete(id);
 testRead(id);
 testDelete(id);
 testRead(id);  */
+
+// testAll();
+
+let entity = new Users();
