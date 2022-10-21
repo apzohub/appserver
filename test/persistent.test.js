@@ -1,12 +1,8 @@
 const { Entity, Users } = require('../src/services/entity');
-const {Table, RepoService} = require('../src/services/persistent');
+const { RepoService } = require('../src/services/persistent');
 const {IdGen} = require('../src/utils/id');
 
-tab = new Table('users', 
-        ['id', 'email', 'password', 'kv', 'state', 'created', 'updated']
-      );
-
-const rs = new RepoService(tab);
+const rs = new RepoService(Users.name);
 
 const id = IdGen.strId();
 const email = id + '@bar.com';
@@ -193,6 +189,5 @@ testRead(id);
 testDelete(id);
 testRead(id);  */
 
-// testAll();
+testAll();
 
-let entity = new Users();
