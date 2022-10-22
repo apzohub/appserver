@@ -12,19 +12,19 @@ class Logger{
     }
 
     error(msg, ...prms){
-        Logger.logger.error(`${Logger.ln()} - ${msg}${Logger.toStr(prms)}`);
+        Logger.logger.error(`${Logger.ln()} ${Logger.toStr(msg)}${Logger.toStr(prms)}`);
     }
 
     warn(msg, ...prms){
-        Logger.logger.warn(`${Logger.ln()} - ${msg}${Logger.toStr(prms)}`);
+        Logger.logger.warn(`${Logger.ln()} ${Logger.toStr(msg)}${Logger.toStr(prms)}`);
     }
 
     debug(msg, ...prms){
-        Logger.logger.debug(`${Logger.ln()} - ${msg}${Logger.toStr(prms)}`);
+        Logger.logger.debug(`${Logger.ln()} ${Logger.toStr(msg)}${Logger.toStr(prms)}`);
     }
     
     info(msg, ...prms){
-        Logger.logger.info(`${Logger.ln()} - ${msg}${Logger.toStr(prms)}`);
+        Logger.logger.info(`${Logger.ln()} ${Logger.toStr(msg)}${Logger.toStr(prms)}`);
     }
 
     static ln(){
@@ -34,8 +34,8 @@ class Logger{
     }
 
     static toStr(prms){
-        if(prms.length == 0) return '';
-        return ` - ${JSON.stringify(prms)}`;
+        if(!prms) return '';
+        return ` - ${typeof prms == 'string'? prms: JSON.stringify(prms)}`;
     }
 
     static logger;

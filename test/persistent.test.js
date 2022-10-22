@@ -1,8 +1,8 @@
-const { Entity, Users } = require('../src/services/entity');
+const { Entity, User } = require('../src/services/entity');
 const { RepoService } = require('../src/services/persistent');
 const {IdGen} = require('../src/utils/id');
 
-const rs = new RepoService(Users.name);
+const rs = new RepoService(User);
 
 const id = IdGen.strId();
 const email = id + '@bar.com';
@@ -20,7 +20,11 @@ const testCreate = async (entity)=>{
 
 const testCreate2 = (entity)=>{
     console.log('testCreate2')
-    rs.create(entity).then((ret) => console.log(`created: ${JSON.stringify(ret)}`));
+    rs.create(entity)
+    .then((ret) => {
+        console.log(`created: ${JSON.stringify(ret)}`);
+    })
+    .catch(e => console.error(e));
 }
 
 const testFind = async ()=>{
@@ -99,7 +103,7 @@ const testLDelete = async (p)=>{
 }
 
 const testAll = async () =>{
-    let entity = new Users(email, 'xyz');
+    let entity = new User(email, 'xyz');
     const id = entity.id;
     console.log('testCreate->')
     try{
@@ -178,8 +182,8 @@ const testAll = async () =>{
 }
 
 console.log('/////////////');
-// testCreate(new Users(email, 'xyz'));
-// testCreate2(new Users(email, 'xyz'));
+// testCreate(new User(email, 'xyz'));
+testCreate2(new User(email, 'xyz'));
 /* testFind2(`select * from users where email='xyz'`);
 testFindByEmail(email);
 testUpdate('112a123f-9606-4bdb-9671-6ccc83864df9');
@@ -189,5 +193,5 @@ testRead(id);
 testDelete(id);
 testRead(id);  */
 
-testAll();
+// testAll();
 

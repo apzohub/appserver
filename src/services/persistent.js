@@ -26,12 +26,14 @@ pool.on('error', (err, client) => {
 
 class RepoService{
     constructor(type){
-        this.type = type.toLowerCase();
+        if(!type) throw new Error('Type cannot be null');
+        this.type = type.name.toLowerCase();
     }
 
     async read(id){
         try{
             let res = await this.exec(Entity.getDML(this.type, Entity.READ), [id]);
+            if(res.rowCount > 0)
             return res.rowCount > 0 ?res.rows[0]:null; //must be unique
         } catch (error) {
             throw new Error(`Not Found ${id}`);
@@ -42,8 +44,9 @@ class RepoService{
         try{
             Entity.init(entity);
             let res = await this.exec(Entity.getDML(this.type, Entity.CREATE), this.toArr(entity));
-            //logger.debug(res);
-            return res.rowCount;
+            if(res.rowCount == 1)
+                return entity.id;
+            throw `failed creation`;
         } catch (error) {
             console.error(error);
             throw new Error(`Failed creating entity ${entity.id}`);

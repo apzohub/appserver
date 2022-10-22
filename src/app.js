@@ -28,7 +28,9 @@ app.disable('x-powered-by');
 app.disable('etag');
 
 // cors
-if(CONF.app.cors == 'true'){
+// console.log('cors =>', CONF.app.cors);
+if(CONF.app.cors){
+  // console.log('enabled cors ', CONF.app.webapp_url);
   var corsOpt = {
     origin: CONF.app.webapp_url
   }
@@ -83,13 +85,13 @@ app.use('/favicon.ico|/robots.txt', (req, res) => {
 
 
 //OpenAPI / Swagger
-if(CONF.opt.open_api === 'true'){
+if(CONF.opt.open_api){
   const openapi = require('./services/openapi');
   app.use('/', openapi);
 }
 
 //GraphQL
-if(CONF.opt.graphql === 'true'){
+if(CONF.opt.graphql){
 
   const { graphqlHTTP } = require('express-graphql');
 
@@ -103,12 +105,12 @@ if(CONF.opt.graphql === 'true'){
 
 
 //Auth
-app.use((req, res, next)=>{
+/* app.use((req, res, next)=>{
   if(req.path.startsWith('/api')){
     return passport.authenticate('bearer', { session: false });
   }
   next();
-})
+}) */
 // app.use(passport.authenticate('session'));
 
 const auth = require('./services/auth');

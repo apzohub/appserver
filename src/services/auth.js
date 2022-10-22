@@ -6,6 +6,8 @@ const CONF = require('../utils/conf');
 const router = require('express').Router();
 const asyncFn = require('../com');
 // const joi = require('joi');
+const { Entity, User } = require('./entity');
+const { RepoService } = require('./persistent');
 
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
@@ -18,17 +20,19 @@ const login = require('connect-ensure-login');
 const { Logger } = require('../utils/logger');
 const logger = new Logger('RepoService');
 
+const rs = new RepoService(User);
+
 
 passport.use(new LocalStrategy((email, password, cb) => {
-   console.log('local');
-   db.get('SELECT * FROM users WHERE email = ?', [ email ], function(err, user) {
+   logger.debug('local');
+   rs.find("email=$1", [ email ], function(err, user) {
      if (err) { return cb(err); }
-     if (!user) { return cb(null, false, { message: 'Incorrect username or password.' }); }
+     if (!user) { return cb(null, false, { message: 'Invalid email or password.' }); }
  
      crypto.pbkdf2(password, user.salt, 310000, 32, 'sha256', function(err, hashedPassword) {
        if (err) { return cb(err); }
        if (!crypto.timingSafeEqual(user.hashed_password, hashedPassword)) {
-         return cb(null, false, { message: 'Incorrect username or password.' });
+         return cb(null, false, { message: 'Invalid email or password.' });
        }
        return cb(null, user);
      });
@@ -61,45 +65,45 @@ passport.use(new MagicLinkStrategy({
   console.log(msg);
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      logger.debug('foo!');
       resolve("foo");
     }, 300);
   });
-}, (user) => {
+},  function verify(user) {
+  logger.debug('verify!');
   return new Promise((resolve, reject) => {
-    db.get('SELECT * FROM users WHERE email = ?', [
-      user.email
-    ], (err, row) => {
-      if (err) { return reject(err); }
-      if (!row) {
-        db.run('INSERT INTO users (email, email_verified) VALUES (?, ?)', [
-          user.email,
-          1
-        ], (err) => {
-          if (err) { return reject(err); }
-          var id = this.lastID;
-          var obj = {
-            id: id,
-            email: user.email
-          };
-          return resolve(obj);
-        });
-      } else {
-        return resolve(row);
+    logger.debug('verify....!')
+    rs.find("email=$1", [user.email]).then((exusr) => {
+      if(!exusr) {
+        const exusr = new User(user.email, user.password, {chk: 0});
+        rs.create(exusr).then((ret) => {
+            logger.debug(`created: ${JSON.stringify(ret)}`);
+        }).catch(err => reject(err));
+      }else{
+        if(!exusr['kv']['chk']) reject({err: "Invalid user!"});
+        if(exusr['kv']['chk'] != 0) reject({err: "That user already exists!"});
+        exusr['kv']['chk']=1;
+        db.update(exusr).then(ret => {
+          resolve({id: exusr.id, email: exusr.email})
+        }).catch(err => reject(err));
       }
+    }).catch(err => {
+      console.error(err);
+      reject(err);
     });
   });
 }));
 
 passport.serializeUser((user, cb) => {
   process.nextTick(() => {
-    console.log('serializeUser');
+    logger.debug('serializeUser');
     cb(null, { id: user.id, email: user.email });
   });
 });
 
 passport.deserializeUser((user, cb) => {
   process.nextTick(() => {
-    console.log('deserializeUser');
+    logger.debug('deserializeUser');
     return cb(null, user);
   });
 });
@@ -109,15 +113,19 @@ router.post('/auth/reg', passport.authenticate('magiclink', {
   failureMessage: true,
   successMessage: true
 }), (req, res, next) => {
-  console.log('/auth/reg:', req.body);
+  logger.debug('/auth/reg:', req.body);
   res.status(200).send({location:'/reg/echeck'});
 });
 
-router.get('/auth/reg/verify', passport.authenticate('magiclink', {
+router.get('/auth/reg/verify', (req, res, next) => {
+  logger.debug('1. /auth/reg/verify:', req.body);
+  next();
+}, passport.authenticate('magiclink', {
+  action : 'acceptToken',
   failureMessage: true,
   successMessage: true
 }), (req, res, next) => {
-  console.log('/auth/reg/verify:', req.body);
+  logger.debug('2. /auth/reg/verify:', req.body);
   res.status(202);
 });
 
@@ -126,12 +134,12 @@ router.post('/auth/ses', passport.authenticate('local', {
   failureRedirect: '/auth',
   failureMessage: true
 }), (req, res, next) => {
-  // console.log('/auth/ses:', req.body);
+  // logger.debug('/auth/ses:', req.body);
   res.status(200).send({location:'/'});
 });
 
 router.delete('/auth/ses', (req, res, next) => {
-  // console.log('/auth/ses:', req.body);
+  // logger.debug('/auth/ses:', req.body);
   req.logout((err) => {
     if (err) { return next(err); }
     res.status(202);

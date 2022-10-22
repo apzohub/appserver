@@ -1,6 +1,6 @@
 const CONF = require('../utils/conf');
 
-if(CONF.opt.rate_limit === 'true'){
+if(CONF.opt.rate_limit){
     console.log('setting rate limits');
     const rateLimit = require('express-rate-limit');
     const RedisStore = require("rate-limit-redis");

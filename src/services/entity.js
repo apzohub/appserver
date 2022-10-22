@@ -61,7 +61,7 @@ class Entity{
         const name = entity.getName();
         const cols = Object.getOwnPropertyNames(entity);
         Entity.cols[name] = cols;
-        console.log(Entity.cols);
+        // console.log(Entity.cols);
         
         let ins='', set='', values='';
         for(let i=1; i<=cols.length; i++){
@@ -81,11 +81,11 @@ class Entity{
             update:`update ${name} set ${set} where id=$1`,
             delete:`delete from ${name} where id=$1`,
         }
-        console.log(Entity.dmls);
+        // console.log(Entity.dmls);
     }
 }
 
-class Users extends Entity{
+class User extends Entity{
     email;
     password;
     constructor(email, password, kv){
@@ -98,5 +98,5 @@ class Users extends Entity{
 
 module.exports = {
     Entity,
-    Users
+    User
 };
