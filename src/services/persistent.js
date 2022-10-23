@@ -1,7 +1,7 @@
 const CONF = require('../utils/conf');
 const uuid = require('uuid').v4;
 const { Pool } = require('pg');
-const { Entity } = require('./entity');
+const { Entity } = require('../model/entity');
 
 const { Logger } = require('../utils/logger');
 const logger = new Logger(module);//'RepoService'
@@ -36,6 +36,7 @@ class RepoService{
             if(res.rowCount > 0)
             return res.rowCount > 0 ?res.rows[0]:null; //must be unique
         } catch (error) {
+            logger.error(error);
             throw new Error(`Not Found ${id}`);
         }
     }
@@ -59,6 +60,7 @@ class RepoService{
             let res = await this.exec(Entity.getDML(this.type, Entity.UPDATE), [...this.toArr(entity)]);
             return res.rowCount;
         } catch (error) {
+            logger.error(error);
             throw new Error(`Not Found ${entity.id}`);
         }
     }
@@ -70,6 +72,7 @@ class RepoService{
             let res = await this.exec(Entity.getDML(this.type, Entity.DELETE), [id]);
             return res.rowCount;
         } catch (error) {
+            logger.error(error);
             throw new Error(`Not Found ${id}`);
         }
     }
@@ -78,20 +81,22 @@ class RepoService{
     async ldelete(entity){
         const id = typeof entity === 'string'?entity:entity.id;
         try{
-            let res = await this.exec(`update ${this.type} set state=$1, updated=$2 where id=$3`,
+            let res = await this.exec(Entity.getDML(this.type, Entity.LDELETE),
                   [Entity.DELETED, new Date(), id]);
             return res.rowCount;
         } catch (error) {
+            logger.error(error);
             throw new Error(`Not Found ${id}`);
         }
     }
 
     async find(cond, params){
         try{
-            let query = `select * from ${this.type} ${cond?`where ${cond}`:''}`;
+            let query = `${Entity.getDML(this.type, Entity.FIND)} ${cond?`where ${cond}`:''}`;
             let res = await this.exec(query, params);
             return res.rowCount > 0? res.rows: [];
         } catch (error) {
+            logger.error(error);
             throw new Error("Not Found");
         }
     }
@@ -99,7 +104,8 @@ class RepoService{
     async exec(query, params){
         const client = await pool.connect();
         try{
-            logger.debug(query);//, params);
+            logger.debug(query, params);
+            // logger.silly(query, params);
             await client.query('BEGIN');
             let res = await client.query(query, params);
             await client.query('COMMIT');

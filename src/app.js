@@ -111,7 +111,7 @@ if(CONF.opt.graphql){
   }
   next();
 }) */
-// app.use(passport.authenticate('session'));
+app.use(passport.authenticate('session'));
 
 const auth = require('./services/auth');
 app.use('/', auth);

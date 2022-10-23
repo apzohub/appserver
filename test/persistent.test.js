@@ -1,4 +1,4 @@
-const { Entity, User } = require('../src/services/entity');
+const { Entity, User } = require('../src/model/entity');
 const { RepoService } = require('../src/services/persistent');
 const {IdGen} = require('../src/utils/id');
 
@@ -182,8 +182,9 @@ const testAll = async () =>{
 }
 
 console.log('/////////////');
+testFindByEmail(email);
 // testCreate(new User(email, 'xyz'));
-testCreate2(new User(email, 'xyz'));
+// testCreate2(new User(email, 'xyz'));
 /* testFind2(`select * from users where email='xyz'`);
 testFindByEmail(email);
 testUpdate('112a123f-9606-4bdb-9671-6ccc83864df9');

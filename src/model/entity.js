@@ -1,4 +1,8 @@
+const CONF = require('../utils/conf');
 const {IdGen} = require('../utils/id');
+const { Logger } = require('../utils/logger');
+
+const logger = new Logger(module);//'RepoService'
 
 //Base Entity
 class Entity{
@@ -31,6 +35,8 @@ class Entity{
     static READ='read';
     static UPDATE='update';
     static DELETE='delete';
+    static LDELETE='ldelete';
+    static FIND='find';
     static cols={};
     static dmls={};
 
@@ -42,6 +48,7 @@ class Entity{
         entity.updated=date;
         if(!Entity.cols[entity.getName()])
             Entity._init(entity);
+        // console.log(Entity.dmls);
     }
 
     getName(){
@@ -74,14 +81,16 @@ class Entity{
             values += `$${i}`;
             set += `${cols[i-1]}=$${i}`;
         }
-        
+        //default DMLs
+        const schema=CONF.db.schema;
         Entity.dmls[name] = {
-            create:`insert into ${name}(${ins}) values(${values})`,
-            read:`select * from ${name} where id=$1`,
-            update:`update ${name} set ${set} where id=$1`,
-            delete:`delete from ${name} where id=$1`,
+            create:`insert into ${schema}.${name}(${ins}) values(${values})`,
+            read:`select * from ${schema}.${name} where id=$1`,
+            update:`update ${schema}.${name} set ${set} where id=$1`,
+            delete:`delete from ${schema}.${name} where id=$1`,
+            ldelete: `update ${schema}.${name} set state=$1, updated=$2 where id=$3`,
+            find: `select * from ${schema}.${name}`
         }
-        // console.log(Entity.dmls);
     }
 }
 
@@ -95,6 +104,9 @@ class User extends Entity{
         Entity.init(this);//must be called
     }
 }
+//init for DMLs!
+logger.info('init for DMLs');
+new User();
 
 module.exports = {
     Entity,

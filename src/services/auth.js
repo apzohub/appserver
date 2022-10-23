@@ -3,19 +3,23 @@
  * support 2FA (MFA), SSO.
  */
 const CONF = require('../utils/conf');
-const router = require('express').Router();
 const asyncFn = require('../com');
+const router = require('express').Router();
+const {StatusCodes} = require('http-status-codes');
+
 // const joi = require('joi');
-const { Entity, User } = require('./entity');
+const { Entity, User } = require('../model/entity');
 const { RepoService } = require('./persistent');
+const {IdGen} = require('../utils/id');
 
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const BasicStrategy = require('passport-http').BasicStrategy;
-const MagicLinkStrategy = require('passport-magic-link').Strategy;
 const BearerStrategy = require('passport-http-bearer').Strategy;
 const oauth2orize = require('oauth2orize');
 const login = require('connect-ensure-login');
+
+
 
 const { Logger } = require('../utils/logger');
 const logger = new Logger('RepoService');
@@ -40,59 +44,23 @@ passport.use(new LocalStrategy((email, password, cb) => {
  }));
 
 passport.use(new BearerStrategy((token, done) => {
-    User.findOne({ token: token }, function (err, user) {
-      if (err) { return done(err); }
-      if (!user) { return done(null, false); }
-      return done(null, user, { scope: 'read' });
+    logger.debug('tkn', token);
+    let data = IdGen.jwt_verify(token);
+    rs.find("email=$1", [data['email']]).then((exusr) => {
+      if(exusr.length > 0 && exusr[0].state == Entity.ACTIVE) {
+        exusr = exusr[0];
+        //res.status(StatusCodes.OK).send({email: exusr.email});
+        done(null, exusr, { scope: 'read' });
+      }else
+        done(null, false);
+        // res.status(StatusCodes.UNAUTHORIZED);
+    }).catch(err => {
+      logger.error(err);
+      //res.status(StatusCodes.UNAUTHORIZED);
+      done(err);
     });
   }
 ));
-
-passport.use(new MagicLinkStrategy({
-  secret: 'ap whildcat',
-  userFields: [ 'email' ],
-  tokenField: 'token',
-  verifyUserAfterToken: true
-}, function send(user, token) {
-  var link = `${CONF.app.webapp_url}/reg/verify?token=${token}`;
-  var msg = {
-    to: user.email,
-    from: CONF.app.email,
-    subject: `Sign in to ${CONF.app.name}`,
-    text: `Hello! Click the link below to finish signing in to ${CONF.app.name}.\r\n\r\n ${link}`,
-    html: `<h3>Hello!</h3><p>Click the link below to finish signing in to Todos.</p><p><a href="${link}">Sign in</a></p>`,
-  };
-  console.log(msg);
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      logger.debug('foo!');
-      resolve("foo");
-    }, 300);
-  });
-},  function verify(user) {
-  logger.debug('verify!');
-  return new Promise((resolve, reject) => {
-    logger.debug('verify....!')
-    rs.find("email=$1", [user.email]).then((exusr) => {
-      if(!exusr) {
-        const exusr = new User(user.email, user.password, {chk: 0});
-        rs.create(exusr).then((ret) => {
-            logger.debug(`created: ${JSON.stringify(ret)}`);
-        }).catch(err => reject(err));
-      }else{
-        if(!exusr['kv']['chk']) reject({err: "Invalid user!"});
-        if(exusr['kv']['chk'] != 0) reject({err: "That user already exists!"});
-        exusr['kv']['chk']=1;
-        db.update(exusr).then(ret => {
-          resolve({id: exusr.id, email: exusr.email})
-        }).catch(err => reject(err));
-      }
-    }).catch(err => {
-      console.error(err);
-      reject(err);
-    });
-  });
-}));
 
 passport.serializeUser((user, cb) => {
   process.nextTick(() => {
@@ -108,25 +76,65 @@ passport.deserializeUser((user, cb) => {
   });
 });
 
-router.post('/auth/reg', passport.authenticate('magiclink', {
-  action: 'requestToken',
-  failureMessage: true,
-  successMessage: true
-}), (req, res, next) => {
+router.post('/auth/reg', (req, res, next) => {
   logger.debug('/auth/reg:', req.body);
-  res.status(200).send({location:'/reg/echeck'});
+  let user = req.body;
+  console.log('user: ', user, user.email)
+  rs.find("email=$1", [user.email]).then((exusr) => {
+    logger.info('exusr: ',exusr); 
+    if(exusr.length == 0) {
+      const exusr = new User(user.email, user.password, {chk: 0});
+      rs.create(exusr).then((ret) => {
+          logger.debug(`created: ${JSON.stringify(ret)}`);
+          const token = IdGen.jwt({email: user.email});
+          const link = `${CONF.app.webapp_url}/reg/verify?token=${token}`;
+          const msg = {
+            to: user.email,
+            from: CONF.app.email,
+            subject: `Sign in to ${CONF.app.name}`,
+            text: `Hello! Click the link below to finish signing in to ${CONF.app.name}.\r\n\r\n ${link}`,
+            html: `<h3>Hello!</h3><p>Click the link below to finish signing in to Todos.</p><p><a href="${link}">Sign in</a></p>`,
+          };
+          console.log(msg);
+          res.status(StatusCodes.OK).send({location:'/reg/echeck'});
+      }).catch(err => {
+        logger.error(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR)
+      });
+    }else{
+      res.status(StatusCodes.BAD_REQUEST).send({err: "That user already exists!"});
+    }
+  }).catch(err => {
+    logger.error(err);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR);
+  });
+  res.status(StatusCodes.BAD_REQUEST);
 });
 
 router.get('/auth/reg/verify', (req, res, next) => {
-  logger.debug('1. /auth/reg/verify:', req.body);
-  next();
-}, passport.authenticate('magiclink', {
-  action : 'acceptToken',
-  failureMessage: true,
-  successMessage: true
-}), (req, res, next) => {
-  logger.debug('2. /auth/reg/verify:', req.body);
-  res.status(202);
+  logger.debug('/auth/reg/verify:', req.query, req.query['token']);
+  let data = IdGen.jwt_verify(req.query['token']);
+  rs.find("email=$1", [data['email']]).then((exusr) => {
+    if(exusr.length > 0) {
+      exusr = exusr[0];
+      if(typeof exusr['kv']['chk'] == undefined) {
+        res.status(StatusCodes.BAD_REQUEST).send({err: "Invalid user!"});
+        return;
+      }
+      if(exusr['kv']['chk'] != 0) {
+        res.status(StatusCodes.BAD_REQUEST).send({err: "That user already exists!"});
+        return;
+      }
+      exusr['kv']['chk']=1;
+      exusr.state = Entity.ACTIVE;
+      rs.update(exusr).then(ret => {
+        res.status(202);
+      }).catch(err => res.status(StatusCodes.INTERNAL_SERVER_ERROR));
+    }else{
+      res.status(StatusCodes.BAD_REQUEST).send({err: "Invalid user!"});
+    }  
+  });
+  
 });
 
 router.post('/auth/ses', passport.authenticate('local', {
@@ -134,12 +142,12 @@ router.post('/auth/ses', passport.authenticate('local', {
   failureRedirect: '/auth',
   failureMessage: true
 }), (req, res, next) => {
-  // logger.debug('/auth/ses:', req.body);
-  res.status(200).send({location:'/'});
+  logger.debug('/auth/ses:', req.body);
+  //res.status(StatusCodes.OK).send({location:'/'});
 });
 
 router.delete('/auth/ses', (req, res, next) => {
-  // logger.debug('/auth/ses:', req.body);
+  logger.debug('/auth/ses:', req.body);
   req.logout((err) => {
     if (err) { return next(err); }
     res.status(202);

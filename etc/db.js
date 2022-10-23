@@ -9,7 +9,7 @@ const inst = new Liquibase({
     username: process.env.DB_USR,
     password: process.env.DB_PWD,
     liquibaseSchemaName: 'public',
-    logLevel: LiquibaseLogLevels.Off,
+    logLevel: LiquibaseLogLevels.Warning,
   });
 
 inst.update();
