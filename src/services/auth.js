@@ -65,9 +65,10 @@ router.get('/auth/reg/verify', (req, res, next) => {
   logger.debug('/auth/reg/verify:', req.query, req.query['token']);
   IdGen.jwt_averify(req.query['token'], (err, sub) => {
     if(err){
+      res.status(StatusCodes.BAD_REQUEST);
       if(err.name == 'TokenExpiredError')
-        res.status(StatusCodes.BAD_REQUEST).send({err: 'Linke has expired!'});
-      else res.sendStatus(StatusCodes.BAD_REQUEST);
+        res.send({err: 'Link has expired!'});
+      else res.send({});
       return;
     }
     rs.find("email=$1", [sub['email']]).then((exusr) => {
@@ -139,6 +140,10 @@ router.post('/auth/ses', (req, res, next) => {
 //jwt refresh
 router.put('/auth/ses', (req, res, next) => {
   
+});
+
+router.put('/auth/fpwd', (req, res, next) => {
+  res.status(202).send();
 });
 
 router.delete('/auth/ses', (req, res, next) => {
