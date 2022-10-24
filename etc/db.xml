@@ -10,7 +10,8 @@
             CREATE TABLE IF NOT EXISTS PUBLIC.USER(
                 ID varchar PRIMARY KEY,
                 EMAIL varchar UNIQUE,
-                PASSWORD varchar,
+                PASSWORD bytea,
+                SALT bytea,
                 KV jsonb,
                 STATE varchar,
                 CREATED timestamp with time zone,

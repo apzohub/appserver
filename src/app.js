@@ -2,7 +2,7 @@
 const CONF = require('./utils/conf');
 const express = require('express');
 const session = require('express-session');
-const passport = require('passport');
+// const passport = require('passport');
 const path = require('path');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -57,9 +57,9 @@ if(CONF.app.cors){
 let sess = {
   secret: 'ap whildcat',
   resave: false,
-  saveUninitialized: false,
-  name: 'sessionId',
-  cookie: {}
+  saveUninitialized: true,
+  // name: 'sessionId',
+  cookie: {},
 }
 
 if (env === 'prod') {
@@ -105,16 +105,24 @@ if(CONF.opt.graphql){
 
 
 //Auth
+const {authRouter,  authorize} = require('./services/auth');
+app.use('/', authRouter);
+app.use('/', authorize);
+/* router.use((req, res, next)=>{
+  if(req.path.startsWith('/api')){
+    return authorize(req, res, next);
+  }
+  next();
+}) */
+// router.use('/api', authorize);
+
 /* app.use((req, res, next)=>{
   if(req.path.startsWith('/api')){
     return passport.authenticate('bearer', { session: false });
   }
   next();
 }) */
-app.use(passport.authenticate('session'));
-
-const auth = require('./services/auth');
-app.use('/', auth);
+// app.use(passport.authenticate('session'));
 
 /**
  * Custom routes

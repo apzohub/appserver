@@ -97,10 +97,12 @@ class Entity{
 class User extends Entity{
     email;
     password;
-    constructor(email, password, kv){
+    salt;
+    constructor(email, password, salt, kv){
         super(kv);
         this.email=email;
         this.password=password;
+        this.salt = salt;
         Entity.init(this);//must be called
     }
 }

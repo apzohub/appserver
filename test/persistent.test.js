@@ -57,6 +57,13 @@ const testFindByEmail = async (email)=>{
     };
 }
 
+const testFindByEmail2 = async (email)=>{
+    console.log('testFindByEmail')
+    rs.find("email=$1", [email]).then((ret) => {
+        console.log(`testFindByEmail: ${JSON.stringify(ret)}`);
+    }).catch(e => console.error(e));
+}
+
 const testRead = async (id)=>{
     console.log('testRead')
     try{
@@ -182,7 +189,8 @@ const testAll = async () =>{
 }
 
 console.log('/////////////');
-testFindByEmail(email);
+// testFindByEmail(email);
+testFindByEmail2("foo@bar.com");
 // testCreate(new User(email, 'xyz'));
 // testCreate2(new User(email, 'xyz'));
 /* testFind2(`select * from users where email='xyz'`);

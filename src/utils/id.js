@@ -37,6 +37,7 @@ class IdGen{
         return ret;
     }
     
+    //FIXME: subject
     static jwt(data){
         //HMAC SHA256
         return jwt.sign(data, SECRET, opt); //expiresIn = 1hr => 60 * 60 sec
@@ -49,8 +50,13 @@ class IdGen{
             return jwt.verify(token, SECRET, opt);
         }catch(error){
             logger.error(error);
-            return null;
+            throw error;
         }
+    }
+
+    //async version cb = (err, decoded) = {}
+    static jwt_averify(token, cb){
+        jwt.verify(token, SECRET, opt, cb);
     }
 }
 
