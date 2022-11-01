@@ -43,7 +43,7 @@ class Logger{
         if(Logger.logger) return;
         console.log('init logger');
         Logger.logger = winston.createLogger({
-            level: process.env.NODE_ENV=='dev'?'debug':'info',
+            level: process.env.NODE_ENV=='development'?'debug':'info',
             // format: winston.format.json(),
             format: combine(
                 // label({ label: this.label(ctx, file) }),
@@ -59,7 +59,7 @@ class Logger{
             ],
         });
         
-        if (process.env.NODE_ENV == 'dev') {
+        if (process.env.NODE_ENV == 'development') {
             this.logger.add(new winston.transports.Console());
         }
     }

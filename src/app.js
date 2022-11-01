@@ -12,7 +12,7 @@ const logger = new Logger('RepoService');
 
 const methodOverride = require('method-override');
 
-const env = process.env.NODE_ENV; // 'dev' or 'prod'
+const env = process.env.NODE_ENV; // 'development' or 'production'
 
 const app = express();
 
